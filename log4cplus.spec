@@ -1,11 +1,11 @@
 Summary:	Logging Framework for C++
 Name:		log4cplus
-Version:	1.1.0
+Version:	1.2.0
 Release:	1
 License:	ASL 2.0
 URL:		http://sourceforge.net/projects/log4cplus
 Source0:	http://downloads.sourceforge.net/log4cplus/%{name}-%{version}.tar.xz
-# Source0-md5:	8f04a7b2db55384440b0ab83b6362d5d
+# Source0-md5:	efbfc0e55e3878f28f064fea5f967786
 Group:		Libraries
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -46,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc LICENSE README ChangeLog
+%doc LICENSE README.md ChangeLog
 %attr(755,root,root) %{_libdir}/liblog4cplus-*.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/liblog4cplus-*.so.5
 
