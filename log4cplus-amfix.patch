@@ -1,0 +1,10 @@
+--- log4cplus-2.0.7/swig/python/Makefile.am.orig	2021-08-09 18:04:14.123693336 +0200
++++ log4cplus-2.0.7/swig/python/Makefile.am	2022-02-06 13:47:53.455963458 +0100
+@@ -36,6 +36,7 @@ $(PYTHON_WRAPU_CXX): $(SWIG_SOURCES)
+ 	$(SWIG) -DUNICODE=1 -D_UNICODE=1 $(SWIG_FLAGS) -c++ -python $(SWIG_PYTHON_OPT) \
+ 	-I$(top_srcdir)/include -I$(top_builddir)/include \
+ 	-I$(top_srcdir)/swig -o $(PYTHON_WRAPU_CXX) \
++	-module log4cplusU \
+ 	$(top_srcdir)/swig/log4cplus.swg
+ endif
+ 

@@ -8,19 +8,24 @@
 Summary:	Logging Framework for C++
 Summary(pl.UTF-8):	Szkielet logowania dla C++
 Name:		log4cplus
-Version:	1.2.2
+Version:	2.0.7
 Release:	1
 License:	BSD or Apache v2.0
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/log4cplus/%{name}-%{version}.tar.xz
-# Source0-md5:	cfe73421b5fe8e7ec06f084a163c8995
+# Source0-md5:	bd71e4f11aa4cd614f081e6f7b51e553
+Patch0:		%{name}-amfix.patch
 URL:		https://sourceforge.net/projects/log4cplus/
 %{?with_qt4:BuildRequires:	QtCore-devel >= 4.0.0}
 %{?with_qt5:BuildRequires:	Qt5Core-devel >= 5.0.0}
-BuildRequires:	libstdc++-devel
+BuildRequires:	autoconf >= 2.50
+BuildRequires:	automake >= 1:1.14
+BuildRequires:	libatomic-devel
+BuildRequires:	libstdc++-devel >= 6:4.7
+BuildRequires:	libtool >= 2:2.4.2
 BuildRequires:	pkgconfig
 %{?with_python:BuildRequires:	python-devel >= 1:2.3}
-%{?with_python:BuildRequires:	rpmbuild(macros) >= 1.219}
+BuildRequires:	rpmbuild(macros) >= 1.219
 %{?with_python:BuildRequires:	swig-python >= 2.0.0}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -40,7 +45,8 @@ Summary:	Development files for log4cplus C++ logging framework
 Summary(pl.UTF-8):	Pliki programistyczne szkieletu C++ do logowania log4cplus
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libstdc++-devel
+Requires:	libatomic-devel
+Requires:	libstdc++-devel >= 6:4.7
 
 %description devel
 This package contains the header files needed to develop applications
@@ -152,8 +158,14 @@ Wiązania Pythona/SWIG do biblioteki log4cplus.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
+%{__libtoolize}
+%{__aclocal} -I m4
+%{__autoconf}
+%{__autoheader}
+%{__automake}
 # note: qt5 requires PIC code (see /usr/include/qt5/QtCore/qglobal.h)
 %configure \
 	%{?with_static_libs:--enable-static --with-pic} \
@@ -172,18 +184,13 @@ rm -rf $RPM_BUILD_ROOT
 %{__rm} $RPM_BUILD_ROOT%{_includedir}/log4cplus/nteventlogappender.h \
 	$RPM_BUILD_ROOT%{_includedir}/log4cplus/win32*.h \
 	$RPM_BUILD_ROOT%{_includedir}/log4cplus/config/{macosx,win32,windowsh-inc}.h \
-	$RPM_BUILD_ROOT%{_includedir}/log4cplus/internal/cygwin-win32.h \
-	$RPM_BUILD_ROOT%{_includedir}/log4cplus/thread/impl/syncprims-win32.h
-
-# missing from make install
-[ ! -f $RPM_BUILD_ROOT%{_includedir}/log4cplus/qt5debugappender.h ]
-cp -p include/log4cplus/qt5debugappender.h $RPM_BUILD_ROOT%{_includedir}/log4cplus
+	$RPM_BUILD_ROOT%{_includedir}/log4cplus/internal/cygwin-win32.h
 
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/liblog4cplus*.la
 
 %if %{with python}
 %py_postclean
-%{__rm} $RPM_BUILD_ROOT%{py_sitedir}/log4cplus/_log4cplus.la
+%{__rm} $RPM_BUILD_ROOT%{py_sitedir}/log4cplus/_log4cplus*.la
 %endif
 
 %clean
@@ -201,15 +208,20 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog LICENSE NEWS README.md TODO
-%attr(755,root,root) %{_libdir}/liblog4cplus-1.2.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplus-1.2.so.5
+%attr(755,root,root) %{_libdir}/liblog4cplus-2.0.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplus-2.0.so.3
+%attr(755,root,root) %{_libdir}/liblog4cplusU-2.0.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusU-2.0.so.3
 
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/liblog4cplus.so
+%attr(755,root,root) %{_libdir}/liblog4cplusU.so
 %dir %{_includedir}/log4cplus
 %{_includedir}/log4cplus/appender.h
 %{_includedir}/log4cplus/asyncappender.h
+%{_includedir}/log4cplus/callbackappender.h
+%{_includedir}/log4cplus/clfsappender.h
 %{_includedir}/log4cplus/clogger.h
 %{_includedir}/log4cplus/config.hxx
 %{_includedir}/log4cplus/configurator.h
@@ -217,12 +229,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/log4cplus/fileappender.h
 %{_includedir}/log4cplus/fstreams.h
 %{_includedir}/log4cplus/hierarchy*.h
+%{_includedir}/log4cplus/initializer.h
+%{_includedir}/log4cplus/log4cplus.h
 %{_includedir}/log4cplus/layout.h
 %{_includedir}/log4cplus/log4judpappender.h
 %{_includedir}/log4cplus/logger.h
 %{_includedir}/log4cplus/loggingmacros.h
 %{_includedir}/log4cplus/loglevel.h
 %{_includedir}/log4cplus/mdc.h
+%{_includedir}/log4cplus/msttsappender.h
 %{_includedir}/log4cplus/ndc.h
 %{_includedir}/log4cplus/nullappender.h
 %{_includedir}/log4cplus/socketappender.h
@@ -244,41 +259,50 @@ rm -rf $RPM_BUILD_ROOT
 %files static
 %defattr(644,root,root,755)
 %{_libdir}/liblog4cplus.a
+%{_libdir}/liblog4cplusU.a
 %endif
 
 %if %{with qt4}
 %files qt4
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappender-1.2.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappender-1.2.so.5
+%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappender-2.0.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappender-2.0.so.3
+%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappenderU-2.0.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappenderU-2.0.so.3
 
 %files qt4-devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappender.so
+%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappenderU.so
 %{_includedir}/log4cplus/qt4debugappender.h
 
 %if %{with static_libs}
 %files qt4-static
 %defattr(644,root,root,755)
 %{_libdir}/liblog4cplusqt4debugappender.a
+%{_libdir}/liblog4cplusqt4debugappenderU.a
 %endif
 %endif
 
 %if %{with qt5}
 %files qt5
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappender-1.2.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappender-1.2.so.5
+%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappender-2.0.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappender-2.0.so.3
+%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappenderU-2.0.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappenderU-2.0.so.3
 
 %files qt5-devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappender.so
+%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappenderU.so
 %{_includedir}/log4cplus/qt5debugappender.h
 
 %if %{with static_libs}
 %files qt5-static
 %defattr(644,root,root,755)
 %{_libdir}/liblog4cplusqt5debugappender.a
+%{_libdir}/liblog4cplusqt5debugappenderU.a
 %endif
 %endif
 
@@ -287,6 +311,8 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %dir %{py_sitedir}/log4cplus
 %attr(755,root,root) %{py_sitedir}/log4cplus/_log4cplus.so
+%attr(755,root,root) %{py_sitedir}/log4cplus/_log4cplusU.so
 %dir %{py_sitescriptdir}/log4cplus
 %{py_sitescriptdir}/log4cplus/log4cplus.py[co]
+%{py_sitescriptdir}/log4cplus/log4cplusU.py[co]
 %endif
