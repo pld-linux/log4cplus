@@ -1,20 +1,27 @@
 #
 # Conditional build:
-%bcond_without	python		# Python/SWIG bindings
+%bcond_without	python		# Python/SWIG bindings (any)
+%bcond_without	python2		# CPython 2.x bindings
+%bcond_without	python3		# CPython 3.x bindings
 %bcond_without	qt4		# liblog4cplusqt4debugappender library
 %bcond_without	qt5		# liblog4cplusqt5debugappender library
 %bcond_without	static_libs	# static libraries
 
+%if %{without python}
+%undefine	with_python2
+%undefine	with_python3
+%endif
 Summary:	Logging Framework for C++
 Summary(pl.UTF-8):	Szkielet logowania dla C++
 Name:		log4cplus
-Version:	2.0.7
+Version:	2.1.1
 Release:	1
 License:	BSD or Apache v2.0
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/log4cplus/%{name}-%{version}.tar.xz
-# Source0-md5:	bd71e4f11aa4cd614f081e6f7b51e553
+# Source0-md5:	6ee2555be39cd269086cc871c834e43f
 Patch0:		%{name}-amfix.patch
+Patch1:		%{name}-swig.patch
 URL:		https://sourceforge.net/projects/log4cplus/
 %{?with_qt4:BuildRequires:	QtCore-devel >= 4.0.0}
 %{?with_qt5:BuildRequires:	Qt5Core-devel >= 5.0.0}
@@ -24,7 +31,8 @@ BuildRequires:	libatomic-devel
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	libtool >= 2:2.4.2
 BuildRequires:	pkgconfig
-%{?with_python:BuildRequires:	python-devel >= 1:2.3}
+%{?with_python2:BuildRequires:	python-devel >= 1:2.3}
+%{?with_python3:BuildRequires:	python3-devel >= 1:3.2}
 BuildRequires:	rpmbuild(macros) >= 1.219
 %{?with_python:BuildRequires:	swig-python >= 2.0.0}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -156,9 +164,22 @@ Python/SWIG bindings for log4cplus library.
 %description -n python-log4cplus -l pl.UTF-8
 Wiązania Pythona/SWIG do biblioteki log4cplus.
 
+%package -n python3-log4cplus
+Summary:	Python/SWIG bindings for log4cplus library
+Summary(pl.UTF-8):	Wiązania Pythona/SWIG do biblioteki log4cplus
+Group:		Libraries/Python
+Requires:	%{name} = %{version}-%{release}
+
+%description -n python3-log4cplus
+Python/SWIG bindings for log4cplus library.
+
+%description -n python3-log4cplus -l pl.UTF-8
+Wiązania Pythona/SWIG do biblioteki log4cplus.
+
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 %build
 %{__libtoolize}
@@ -166,10 +187,23 @@ Wiązania Pythona/SWIG do biblioteki log4cplus.
 %{__autoconf}
 %{__autoheader}
 %{__automake}
+%if %{with python2}
+install -d build-python2
+cd build-python2
+../%configure \
+	PYTHON=%{__python} \
+	--with-python
+%{__make}
+cd ..
+%endif
+
+install -d build
+cd build
 # note: qt5 requires PIC code (see /usr/include/qt5/QtCore/qglobal.h)
-%configure \
+../%configure \
+	PYTHON=%{__python3} \
 	%{?with_static_libs:--enable-static --with-pic} \
-	%{?with_python:--with-python} \
+	%{?with_python3:--with-python} \
 	%{?with_qt4:--with-qt} \
 	%{?with_qt5:--with-qt5}
 %{__make}
@@ -177,7 +211,10 @@ Wiązania Pythona/SWIG do biblioteki log4cplus.
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install \
+%{__make} -C build-python2 install \
+	DESTDIR=$RPM_BUILD_ROOT
+
+%{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
 
 # non-Linux
@@ -188,9 +225,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__rm} $RPM_BUILD_ROOT%{_libdir}/liblog4cplus*.la
 
-%if %{with python}
+%if %{with python2}
 %py_postclean
 %{__rm} $RPM_BUILD_ROOT%{py_sitedir}/log4cplus/_log4cplus*.la
+%endif
+
+%if %{with python3}
+%{__rm} $RPM_BUILD_ROOT%{py3_sitedir}/log4cplus/_log4cplus*.la
 %endif
 
 %clean
@@ -208,10 +249,10 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog LICENSE NEWS README.md TODO
-%attr(755,root,root) %{_libdir}/liblog4cplus-2.0.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplus-2.0.so.3
-%attr(755,root,root) %{_libdir}/liblog4cplusU-2.0.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusU-2.0.so.3
+%attr(755,root,root) %{_libdir}/liblog4cplus-2.1.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplus-2.1.so.9
+%attr(755,root,root) %{_libdir}/liblog4cplusU-2.1.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusU-2.1.so.9
 
 %files devel
 %defattr(644,root,root,755)
@@ -226,6 +267,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/log4cplus/config.hxx
 %{_includedir}/log4cplus/configurator.h
 %{_includedir}/log4cplus/consoleappender.h
+%{_includedir}/log4cplus/exception.h
 %{_includedir}/log4cplus/fileappender.h
 %{_includedir}/log4cplus/fstreams.h
 %{_includedir}/log4cplus/hierarchy*.h
@@ -265,10 +307,10 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with qt4}
 %files qt4
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappender-2.0.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappender-2.0.so.3
-%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappenderU-2.0.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappenderU-2.0.so.3
+%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappender-2.1.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappender-2.1.so.9
+%attr(755,root,root) %{_libdir}/liblog4cplusqt4debugappenderU-2.1.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt4debugappenderU-2.1.so.9
 
 %files qt4-devel
 %defattr(644,root,root,755)
@@ -287,10 +329,10 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with qt5}
 %files qt5
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappender-2.0.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappender-2.0.so.3
-%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappenderU-2.0.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappenderU-2.0.so.3
+%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappender-2.1.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappender-2.1.so.9
+%attr(755,root,root) %{_libdir}/liblog4cplusqt5debugappenderU-2.1.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/liblog4cplusqt5debugappenderU-2.1.so.9
 
 %files qt5-devel
 %defattr(644,root,root,755)
@@ -306,13 +348,20 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 %endif
 
-%if %{with python}
+%if %{with python2}
 %files -n python-log4cplus
 %defattr(644,root,root,755)
 %dir %{py_sitedir}/log4cplus
 %attr(755,root,root) %{py_sitedir}/log4cplus/_log4cplus.so
 %attr(755,root,root) %{py_sitedir}/log4cplus/_log4cplusU.so
-%dir %{py_sitescriptdir}/log4cplus
-%{py_sitescriptdir}/log4cplus/log4cplus.py[co]
-%{py_sitescriptdir}/log4cplus/log4cplusU.py[co]
+%{py_sitescriptdir}/log4cplus
+%endif
+
+%if %{with python3}
+%files -n python3-log4cplus
+%defattr(644,root,root,755)
+%dir %{py3_sitedir}/log4cplus
+%attr(755,root,root) %{py3_sitedir}/log4cplus/_log4cplus.so
+%attr(755,root,root) %{py3_sitedir}/log4cplus/_log4cplusU.so
+%{py3_sitescriptdir}/log4cplus
 %endif
