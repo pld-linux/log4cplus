@@ -15,13 +15,14 @@ Summary:	Logging Framework for C++
 Summary(pl.UTF-8):	Szkielet logowania dla C++
 Name:		log4cplus
 Version:	2.1.1
-Release:	1
+Release:	2
 License:	BSD or Apache v2.0
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/log4cplus/%{name}-%{version}.tar.xz
 # Source0-md5:	6ee2555be39cd269086cc871c834e43f
 Patch0:		%{name}-amfix.patch
 Patch1:		%{name}-swig.patch
+Patch2:		%{name}-link.patch
 URL:		https://sourceforge.net/projects/log4cplus/
 %{?with_qt4:BuildRequires:	QtCore-devel >= 4.0.0}
 %{?with_qt5:BuildRequires:	Qt5Core-devel >= 5.0.0}
@@ -180,6 +181,7 @@ Wiązania Pythona/SWIG do biblioteki log4cplus.
 %setup -q
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 %build
 %{__libtoolize}
