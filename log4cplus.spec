@@ -15,7 +15,7 @@ Summary:	Logging Framework for C++
 Summary(pl.UTF-8):	Szkielet logowania dla C++
 Name:		log4cplus
 Version:	2.1.1
-Release:	2
+Release:	3
 License:	BSD or Apache v2.0
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/log4cplus/%{name}-%{version}.tar.xz
