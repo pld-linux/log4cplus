@@ -15,7 +15,7 @@ Summary:	Logging Framework for C++
 Summary(pl.UTF-8):	Szkielet logowania dla C++
 Name:		log4cplus
 Version:	2.1.1
-Release:	3
+Release:	4
 License:	BSD or Apache v2.0
 Group:		Libraries
 Source0:	https://downloads.sourceforge.net/log4cplus/%{name}-%{version}.tar.xz
@@ -192,7 +192,8 @@ Wiązania Pythona/SWIG do biblioteki log4cplus.
 %if %{with python2}
 install -d build-python2
 cd build-python2
-../%configure \
+%define configuredir ..
+%configure \
 	PYTHON=%{__python} \
 	--with-python
 %{__make}
@@ -201,8 +202,9 @@ cd ..
 
 install -d build
 cd build
+%define configuredir ..
 # note: qt5 requires PIC code (see /usr/include/qt5/QtCore/qglobal.h)
-../%configure \
+%configure \
 	PYTHON=%{__python3} \
 	%{?with_static_libs:--enable-static --with-pic} \
 	%{?with_python3:--with-python} \
