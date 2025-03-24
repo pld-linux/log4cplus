@@ -34,7 +34,7 @@ BuildRequires:	libtool >= 2:2.4.2
 BuildRequires:	pkgconfig
 %{?with_python2:BuildRequires:	python-devel >= 1:2.3}
 %{?with_python3:BuildRequires:	python3-devel >= 1:3.2}
-BuildRequires:	rpmbuild(macros) >= 1.219
+BuildRequires:	rpmbuild(macros) >= 2.043
 %{?with_python:BuildRequires:	swig-python >= 2.0.0}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
